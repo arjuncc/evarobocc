@@ -12,15 +12,8 @@ public class ProperyReader {
 			System.out.println("Read conf : "+propertyValue);
     		String filename = "config.properties";
     		input = ProperyReader.class.getClassLoader().getResourceAsStream(filename);
-
-			// load a properties file
 			prop.load(input);
-
 			proprtyVal = prop.getProperty(propertyValue);
-			// get the property value and print it out
-			//System.out.println(prop.getProperty("database"));
-			//System.out.println(prop.getProperty("dbuser"));
-			//System.out.println(prop.getProperty("dbpassword"));
 
 		} catch (IOException ex) {
 			ex.printStackTrace();
