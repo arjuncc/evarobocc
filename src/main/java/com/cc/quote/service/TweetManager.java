@@ -12,25 +12,37 @@ public class TweetManager {
 			int randomInt =  getRandomInt(10);
 			TwitterConnector twitterConnector = new TwitterConnector();
 			twitterConnector.init();
+			
 			boolean messageFromAuther = false;
-			if(randomInt <= 3 && !messageFromAuther) {
-				System.out.println(" QUOTE ");
-				QuoteServiceHelper quoteServiceHelper = new QuoteServiceHelper();
-				QuoteModel quote = quoteServiceHelper.getRandomQuote();
-				String quoteString = quote.getQuoteWithCharLimitQuoteOnly(140);
-				System.out.println(" quoteString : "+quoteString);
-				twitterConnector.tweet(quoteString);
-			} else if (randomInt > 3 && randomInt <= 6 && !messageFromAuther){
-				System.out.println(" RETWEET - GLOBAL ");
-				String tweetId = twitterConnector.getRandomTrendingQuote();
-				String userName = twitterConnector.retweet(tweetId);
-				twitterConnector.follow(userName);
-			} else if (randomInt > 6 && randomInt <= 10 && !messageFromAuther){
-				System.out.println(" RETWEET - IND");
-				String tweetId = twitterConnector.getRandomTrendingQuoteIndia();
-				String userName = twitterConnector.retweet(tweetId);
-				twitterConnector.follow(userName);
+			String newMessage = twitterConnector.getNewMessageFromAuther();
+			if(newMessage != null) {
+				messageFromAuther = true;
+				twitterConnector.tweet(newMessage);
 			}
+			
+			if(messageFromAuther) {
+				
+			} else {
+				if(randomInt <= 3 ) {
+					System.out.println(" QUOTE ");
+					QuoteServiceHelper quoteServiceHelper = new QuoteServiceHelper();
+					QuoteModel quote = quoteServiceHelper.getRandomQuote();
+					String quoteString = quote.getQuoteWithCharLimitQuoteOnly(140);
+					System.out.println(" quoteString : "+quoteString);
+					twitterConnector.tweet(quoteString);
+				} else if (randomInt > 3 && randomInt <= 6){
+					System.out.println(" RETWEET - GLOBAL ");
+					String tweetId = twitterConnector.getRandomTrendingQuote();
+					String userName = twitterConnector.retweet(tweetId);
+					twitterConnector.follow(userName);
+				} else if (randomInt > 6 && randomInt <= 10){
+					System.out.println(" RETWEET - IND");
+					String tweetId = twitterConnector.getRandomTrendingQuoteIndia();
+					String userName = twitterConnector.retweet(tweetId);
+					twitterConnector.follow(userName);
+				}
+			}
+			
 			
 			
 		} catch (Exception exp) {

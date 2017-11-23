@@ -26,8 +26,10 @@ public class TwitterConnector {
 	private String TWITTER_CONSUMER_KEY = null;
     private String TWITTER_CONSUMER_SECRET = null;
     private String TWITTER_ACCESS_TOKEN = null;
-    private String TWITTER_ACCESS_SECRET = null;    
+    private String TWITTER_ACCESS_SECRET = null;   
+    private String auther = "arjuncc";   
     private Twitter twitter = null; 
+    private static MessgaeFromAuther lastMessgaeFromAuther = null;
     public void init() {
     	ProperyReader properyReader = new ProperyReader();
     	this.TWITTER_CONSUMER_KEY = properyReader.getValue("TWITTER_CONSUMER_KEY");           
@@ -190,29 +192,67 @@ do {
     	return twitter.destroyFriendship(userName).getBiggerProfileImageURL();
     }
     
+    /*
+    private List<DirectMessage> getDirectMessgae(String auther) {
+    	List<DirectMessage> messages;
+    	
+    }*/
     
-    public List<String> readMessgaes(String auther) throws TwitterException {
-    	List<String> messageList = new ArrayList<String>();
+    public List<MessgaeFromAuther> readMessgaes(String auther) throws TwitterException {
+    	auther = auther == null ? this.auther : auther;
+    	List<MessgaeFromAuther> messageList = new ArrayList<MessgaeFromAuther>();
     	 try {
              Paging paging = new Paging(1);
              List<DirectMessage> messages;
              do {
                  messages = twitter.getDirectMessages(paging);
-                 for (DirectMessage message : messages) {
+                 for (DirectMessage message : messages) {/*
                      System.out.println("From: @" + message.getSenderScreenName() + " id:" + message.getId() + " - "
-                             + message.getText());
+                             + message.getText());*/
+                     if(message.getSenderScreenName().equalsIgnoreCase(auther)) {
+                    	 MessgaeFromAuther msg = new MessgaeFromAuther();
+                    	 msg.setId(message.getId()+"");
+                    	 msg.setText(message.getText());
+                    	 messageList.add(msg);
+                     }
                  }
                  paging.setPage(paging.getPage() + 1);
+                
              } while (messages.size() > 0 && paging.getPage() < 10);
-             System.out.println("done.");
-             System.exit(0);
+            // System.out.println("List : "+messageList);
          } catch (TwitterException te) {
              te.printStackTrace();
              System.out.println("Failed to get messages: " + te.getMessage());
-             System.exit(-1);
+             throw te;
          }
-    	
     	return messageList;
+    }
+    
+    
+    public String getNewMessageFromAuther() throws TwitterException {
+    	String message = null;
+    	List<MessgaeFromAuther> messageList = readMessgaes(null);
+    	 System.out.println("List : "+messageList);
+    	MessgaeFromAuther messgaeFromAuther = messageList.get(0);
+    	
+    	if(TwitterConnector.lastMessgaeFromAuther == null) {
+    		TwitterConnector.lastMessgaeFromAuther = messgaeFromAuther;
+    		System.out.println("Init messaing ");
+    	}
+    	
+    	if(messgaeFromAuther.getId().equalsIgnoreCase(TwitterConnector.lastMessgaeFromAuther.getId())) {
+    		message = null;
+    		 System.out.println("No New Messgae ");
+    	} else {
+    		TwitterConnector.lastMessgaeFromAuther = messgaeFromAuther;
+    		message = messgaeFromAuther.getText();
+    		System.out.println("New Messgae : "+message);
+    	}
+    	
+    //	lastMessgaeFromAuther
+    	
+    	return message;
+    	
     }
     
         
@@ -236,7 +276,7 @@ do {
     	//	twitterConnector.reply("930497966443454464", "Reply from Eva : Hello ");
     	//	twitterConnector.getRandomTrendingUser();
     		//twitterConnector.follow("bryanjoiner");
-    		twitterConnector.readMessgaes(null);
+    	twitterConnector.getNewMessageFromAuther();
     		
     		
     		
@@ -246,6 +286,28 @@ do {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    }
+    
+    private class MessgaeFromAuther {
+    	private String id;
+    	private String Text;
+		public String getId() {
+			return id;
+		}
+		public void setId(String id) {
+			this.id = id;
+		}
+		public String getText() {
+			return Text;
+		}
+		public void setText(String text) {
+			Text = text;
+		}
+		@Override
+		public String toString() {
+			return "MessgaeFromAuther [id=" + id + ", Text=" + Text + "]";
+		}
+    	
     }
     
 }
