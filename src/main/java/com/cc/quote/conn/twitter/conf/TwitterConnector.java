@@ -7,8 +7,11 @@ import java.util.UUID;
 
 import com.cc.quote.common.propery.ProperyReader;
 
+import twitter4j.DirectMessage;
+import twitter4j.Paging;
 import twitter4j.Query;
 import twitter4j.QueryResult;
+import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.Trend;
@@ -187,6 +190,31 @@ do {
     	return twitter.destroyFriendship(userName).getBiggerProfileImageURL();
     }
     
+    
+    public List<String> readMessgaes(String auther) throws TwitterException {
+    	List<String> messageList = new ArrayList<String>();
+    	 try {
+             Paging paging = new Paging(1);
+             List<DirectMessage> messages;
+             do {
+                 messages = twitter.getDirectMessages(paging);
+                 for (DirectMessage message : messages) {
+                     System.out.println("From: @" + message.getSenderScreenName() + " id:" + message.getId() + " - "
+                             + message.getText());
+                 }
+                 paging.setPage(paging.getPage() + 1);
+             } while (messages.size() > 0 && paging.getPage() < 10);
+             System.out.println("done.");
+             System.exit(0);
+         } catch (TwitterException te) {
+             te.printStackTrace();
+             System.out.println("Failed to get messages: " + te.getMessage());
+             System.exit(-1);
+         }
+    	
+    	return messageList;
+    }
+    
         
 	private int getRandomInt(int maxVal) {
 		Random rand = new Random();
@@ -196,13 +224,22 @@ do {
     public static void main(String[] args){
     	TwitterConnector twitterConnector = new TwitterConnector();
     	try {
+    		
+          //  Twitter twitter = new TwitterFactory().getInstance();
+           
+    		
+    		
     		twitterConnector.init();
 			//String tweetresp = twitterConnector.getRandomTrendingQuote();
 			//23424848
 			//923608938943201280
     	//	twitterConnector.reply("930497966443454464", "Reply from Eva : Hello ");
     	//	twitterConnector.getRandomTrendingUser();
-    		twitterConnector.follow("bryanjoiner");
+    		//twitterConnector.follow("bryanjoiner");
+    		twitterConnector.readMessgaes(null);
+    		
+    		
+    		
 			//twitterConnector.getTrendingLocal(10, 23424848); 
 			//System.out.println(tweetresp);
 		} catch (TwitterException e) {
