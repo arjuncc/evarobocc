@@ -232,7 +232,7 @@ do {
     public String getNewMessageFromAuther() throws TwitterException {
     	String message = null;
     	List<MessgaeFromAuther> messageList = readMessgaes(null);
-    	 System.out.println("List : "+messageList);
+    	// System.out.println("List : "+messageList);
     	MessgaeFromAuther messgaeFromAuther = messageList.get(0);
     	
     	if(TwitterConnector.lastMessgaeFromAuther == null) {
