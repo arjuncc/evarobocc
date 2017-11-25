@@ -2,14 +2,16 @@ package com.cc.quote.service;
 
 import java.util.Random;
 
+import com.cc.quote.common.model.Article;
 import com.cc.quote.conn.google.spreadsheet.model.QuoteModel;
+import com.cc.quote.conn.news.api.NewsManager;
 import com.cc.quote.conn.twitter.conf.TwitterConnector;
 import com.cc.quote.service.rest.helper.QuoteServiceHelper;
 
 public class TweetManager {
 	public void tweet() {
 		try {
-			int randomInt =  getRandomInt(10);
+			int randomInt = getRandomInt(14);
 			TwitterConnector twitterConnector = new TwitterConnector();
 			twitterConnector.init();
 			
@@ -40,6 +42,12 @@ public class TweetManager {
 					String tweetId = twitterConnector.getRandomTrendingQuoteIndia();
 					String userName = twitterConnector.retweet(tweetId);
 					twitterConnector.follow(userName);
+				} else if (randomInt > 10 && randomInt <= 14){
+					System.out.println(" NEWS ");
+					NewsManager newsManager = new NewsManager();
+					Article article = newsManager.getRandomNews();
+					System.out.println("article : "+article);
+					twitterConnector.tweet(article.getHeading() + " " + article.getLink(), article.getImage()); 
 				}
 			}
 			

@@ -1,11 +1,19 @@
 package com.cc.quote.conn.twitter.conf;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
 import com.cc.quote.common.propery.ProperyReader;
+import com.google.gdata.data.dublincore.Date;
 
 import twitter4j.DirectMessage;
 import twitter4j.Paging;
@@ -54,6 +62,20 @@ public class TwitterConnector {
         return status.getText();
     }
     
+    public String tweet(String tweetContent, String fileUrl) throws TwitterException, IOException {
+    	URL url = new URL(fileUrl);
+    	StatusUpdate statusUpdate = new StatusUpdate(tweetContent);
+    	URLConnection urlConnection = url.openConnection();
+    	InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+    	statusUpdate.setMedia(getImageName()+".jpeg", in);
+    	Status status = twitter.updateStatus(statusUpdate);
+        return status.getText();
+    }
+    
+    private String getImageName() {
+    	return new Date().getValue();
+    }
+    
     public String retweet(String tweetId) throws TwitterException {
     	Status status =  twitter.showStatus(Long.parseLong(tweetId));
         twitter.retweetStatus(Long.parseLong(tweetId));
@@ -86,8 +108,6 @@ do {
     	List<String> userList = getTweetOwner(10, trendTag);
     	return userList.get(getRandomInt(userList.size()));
     }
-    
-    
     
     
     public String getRandomTrendingQuote() throws TwitterException {
@@ -264,25 +284,25 @@ do {
     public static void main(String[] args){
     	TwitterConnector twitterConnector = new TwitterConnector();
     	try {
-    		
-          //  Twitter twitter = new TwitterFactory().getInstance();
-           
-    		
-    		
     		twitterConnector.init();
+       
+           
+    		twitterConnector.tweet("Test", "https://tctechcrunch2011.files.wordpress.com/2017/11/20-somethings.png");
+    		
+    	//	
 			//String tweetresp = twitterConnector.getRandomTrendingQuote();
 			//23424848
 			//923608938943201280
     	//	twitterConnector.reply("930497966443454464", "Reply from Eva : Hello ");
     	//	twitterConnector.getRandomTrendingUser();
     		//twitterConnector.follow("bryanjoiner");
-    	twitterConnector.getNewMessageFromAuther();
+    	//twitterConnector.getNewMessageFromAuther();
     		
     		
     		
 			//twitterConnector.getTrendingLocal(10, 23424848); 
 			//System.out.println(tweetresp);
-		} catch (TwitterException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
