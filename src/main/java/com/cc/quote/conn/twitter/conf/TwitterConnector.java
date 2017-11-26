@@ -1,25 +1,22 @@
 package com.cc.quote.conn.twitter.conf;
 
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 import com.cc.quote.common.propery.ProperyReader;
 import com.google.gdata.data.dublincore.Date;
 
 import twitter4j.DirectMessage;
+import twitter4j.IDs;
 import twitter4j.Paging;
 import twitter4j.Query;
 import twitter4j.QueryResult;
-import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.Trend;
@@ -109,18 +106,42 @@ do {
     	return userList.get(getRandomInt(userList.size()));
     }
     
-    
     public String getRandomTrendingQuote() throws TwitterException {
+    	return getRandomTrendingQuote(false);
+    }
+    public String getRandomTrendingQuoteWithoutReTweet() throws TwitterException {
+    	return getRandomTrendingQuote(true);
+    }
+    
+    public String getRandomTrendingQuote(boolean avoidReTweet) throws TwitterException {
     	List<String> trendingTopicList = getTrendingGlobal(10);
     	String trendTag = trendingTopicList.get(getRandomInt(trendingTopicList.size()));
-    	List<String> tweetList = getTweets(10, trendTag);
+    	List<String> tweetList = getTweets(10, trendTag, avoidReTweet);
+    	while (tweetList.isEmpty()) {
+    		//System.out.println("inide while");
+    		tweetList = getTweets(10, trendTag, avoidReTweet);
+    	}
+    	//System.out.println("----------------------------------List : "+tweetList);
     	return tweetList.get(getRandomInt(tweetList.size()));
     }
     
     public String getRandomTrendingQuoteIndia() throws TwitterException {
+    	return getRandomTrendingQuoteIndia(false);
+    }
+    
+    public String getRandomTrendingQuoteIndiaWithoutReTweet() throws TwitterException {
+    	return getRandomTrendingQuoteIndia(true);
+    }
+    
+    public String getRandomTrendingQuoteIndia(boolean avoidReTweet) throws TwitterException {
     	List<String> trendingTopicList = getTrendingLocal(10, 23424848);
     	String trendTag = trendingTopicList.get(getRandomInt(trendingTopicList.size()));
-    	List<String> tweetList = getTweets(10, trendTag);
+    	List<String> tweetList = getTweets(10, trendTag, avoidReTweet);
+    	while (tweetList.isEmpty()) {
+    		//System.out.println("inide while");
+    		tweetList = getTweets(10, trendTag, avoidReTweet);
+    	}
+    	//System.out.println("----------------------------------List ind : "+tweetList);
     	return tweetList.get(getRandomInt(tweetList.size()));
     }
     
@@ -153,7 +174,7 @@ do {
     	return trendingTopicList;
     }
     
-    public List<String> getTweets(int count, String topic) throws TwitterException {
+    public List<String> getTweets(int count, String topic, boolean avoidReTweets) throws TwitterException {
         Query query = new Query(topic);
         List<String> tweetList = new ArrayList<String>();
         //query.s
@@ -161,9 +182,22 @@ do {
         QueryResult result = twitter.search(query);
         for (Status status : result.getTweets()) {
             //System.out.println("Status@\t" + status.getUser().getScreenName() + "\t:\t" + status.getText());
-        	// System.out.println("Status@\t" + status.getId() + "\t:\t" + status.getText());
-        	 tweetList.add(status.getId()+"");
+        	// System.out.println("\t" + status.getId() + "\t:\t" + status.getText());
+        	 //to avoid retweets
+        	if(avoidReTweets) {
+	           	 if(!status.getText().startsWith("RT @")) {
+	        		// System.out.println( "Not ReTweet : " + status.getId() + " :" + status.getText());
+	        		 tweetList.add(status.getId()+"");
+	        	 } else {
+	        		// System.out.println( " ReTweet  : " + status.getId() + " :" + status.getText());
+	        	 }
+        	} else {
+	       		 System.out.println( status.getId() + " :" + status.getText());
+	       		 tweetList.add(status.getId()+"");
+        	}
+
         }
+        
     	return tweetList;
     }
     
@@ -182,6 +216,25 @@ do {
     	return tweetList;
     }
     
+    public List<Long> getFollowersList(String userName) throws TwitterException {
+        long cursor = -1;
+        IDs ids;
+        List<Long> followerList;
+        System.out.println("Listing followers's ids.");
+        do {
+        		followerList = new ArrayList<Long>();
+                ids = twitter.getFollowersIDs(userName, cursor);
+                
+            for (long id : ids.getIDs()) {
+                System.out.println("id : "+id);
+                followerList.add(id);
+               // User user = twitter.showUser(id);
+              //  System.out.println(user.getName());
+            }
+        } while ((cursor = ids.getNextCursor()) != 0);
+        return followerList;
+    }
+    
     /***
      * 
      * @param tweetId : tweet Id
@@ -192,7 +245,7 @@ do {
     public String reply(String tweetId, String messgae ) throws TwitterException {
     		Status status = twitter.showStatus(Long.parseLong(tweetId));
     		Status reply = twitter.updateStatus(new StatusUpdate(" @" + status.getUser().getScreenName() + " "+ messgae).inReplyToStatusId(status.getId()));
-    	return Long.toString(reply.getId());
+    	return status.getUser().getScreenName();
     }
     
     
@@ -210,6 +263,15 @@ do {
     
     public String unFollow(String userName) throws TwitterException {
     	return twitter.destroyFriendship(userName).getBiggerProfileImageURL();
+    }
+    
+    public String makeFavorite(String tweetId) throws TwitterException {
+    	return makeFavorite(Long.parseLong(tweetId));
+    }
+    
+    private String makeFavorite(long tweetId) throws TwitterException {
+    	Status status  = twitter.createFavorite(tweetId);
+    	return status.getUser().getScreenName();
     }
     
     /*
@@ -269,10 +331,7 @@ do {
     		System.out.println("New Messgae : "+message);
     	}
     	
-    //	lastMessgaeFromAuther
-    	
     	return message;
-    	
     }
     
         
@@ -287,7 +346,8 @@ do {
     		twitterConnector.init();
        
            
-    		twitterConnector.tweet("Test", "https://tctechcrunch2011.files.wordpress.com/2017/11/20-somethings.png");
+    	//	twitterConnector.tweet("Test", "https://tctechcrunch2011.files.wordpress.com/2017/11/20-somethings.png");
+    		twitterConnector.getFollowersList(twitterConnector.auther);
     		
     	//	
 			//String tweetresp = twitterConnector.getRandomTrendingQuote();
